@@ -1,6 +1,6 @@
 {
     "name": "@plurnk/plurnk-mimetypes-application-gguf",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "application/x-gguf (GGUF local-LLM model) mimetype handler for plurnk-service. Parses the metadata header (arch/quant/context/tokenizer) without loading weights. Hand-rolled, no parser dependency.",
     "type": "module",
     "license": "MIT",
@@ -47,9 +47,9 @@
     "devDependencies": {
         "@types/node": "^26.0.0",
         "typescript": "^7.0.2",
-        "@plurnk/plurnk-mimetypes": "1.1.0"
+        "@plurnk/plurnk-mimetypes": "1.1.1"
     },
     "peerDependencies": {
-        "@plurnk/plurnk-mimetypes": "1.1.0"
+        "@plurnk/plurnk-mimetypes": "1.1.1"
     }
 }
