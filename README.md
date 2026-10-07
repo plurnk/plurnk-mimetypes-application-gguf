@@ -14,11 +14,16 @@ GGUF (llama.cpp / Ollama) packs a model's weights behind a structured key-value 
 
 - `extractRaw(content)` — the metadata keys (`general.architecture`, `llama.context_length`, …) as `field` symbols, in file order.
 - `deepJson(content)` — `{ version, tensorCount, metadata }`, a jsonpath target (`$.metadata['llama.context_length']`).
-- `toText` (regex/glob + embed-source) — the metadata rendered as a `key: value` table. Large arrays (tokenizer vocabularies) are summarized as `<type[N]>`, never expanded.
+- `content` — the metadata rendered as a `key: value` table, also used for binary regex/glob queries. Large arrays (tokenizer vocabularies) are summarized as `<type[N]>`, never expanded.
 - `validate` — throws on bad magic or a truncated header; every other channel degrades to empty.
 
-Per-tensor inventory is out of scope for v1 — the metadata is the "what is this" answer. References are not applicable.
+Per-tensor inventory is not included. References are not applicable.
 
 ## license
 
 MIT.
+
+## Versioning
+
+This package versions independently. Compatibility is declared by its dependency
+ranges; a Plurnk release does not require a release of this package.

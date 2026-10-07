@@ -1,5 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { resolve } from "node:path";
+import { Mimetypes } from "@plurnk/plurnk-mimetypes";
 import Gguf, { readGguf } from "./Gguf.ts";
 
 const META = { mimetype: "application/x-gguf", glyph: "🧠", extensions: [".gguf"] };
@@ -39,6 +41,24 @@ function buildGguf(): Uint8Array {
 
 const GGUF = buildGguf();
 
+it("{§mimetype-content} the declared built handler produces a readable projection through the public framework", async () => {
+    const root = resolve(import.meta.dirname, "..");
+    const mimetypes = new Mimetypes({ discoverOptions: {
+        cwd: root,
+        packageDirs: [root],
+        env: { PLURNK_EXTENSIONS_TRUSTED_ONLY: "1" },
+    } });
+    try {
+        const projection = await mimetypes.projectReadable({ content: GGUF, hint: META.mimetype });
+        assert.equal(projection?.content, h().content(GGUF));
+        assert.equal(projection?.sourceMimetype, META.mimetype);
+        assert.match(projection?.projectionIdentity ?? "", /^[a-f0-9]{64}$/);
+        assert.equal(await mimetypes.projectReadable({ content: enc.encode("not a model"), hint: META.mimetype }), null);
+    } finally {
+        await mimetypes.dispose();
+    }
+});
+
 describe("Gguf — metadata header parse", () => {
     it("reads version, tensor count, and scalar metadata", () => {
         const hdr = readGguf(GGUF)!;
@@ -59,6 +79,17 @@ describe("Gguf — metadata header parse", () => {
 });
 
 describe("Gguf — channels", () => {
+    it("publishes the readable metadata through the content channel", () => {
+        assert.equal(h().content(GGUF), [
+            "general.architecture: llama",
+            "llama.context_length: 4096",
+            "general.quantization_version: 2",
+            "tokenizer.ggml.tokens: <string[3]>",
+            "tensors: 291",
+        ].join("\n"));
+        assert.equal(h().content(new Uint8Array()), undefined);
+    });
+
     it("symbols are the metadata keys in order", () => {
         assert.deepEqual(h().extractRaw(GGUF).map((s) => s.name), [
             "general.architecture", "llama.context_length", "general.quantization_version", "tokenizer.ggml.tokens",
@@ -71,7 +102,7 @@ describe("Gguf — channels", () => {
         assert.equal(tree.metadata["general.architecture"], "llama");
     });
 
-    it("toText renders a readable metadata table (embed-source)", async () => {
+    it("regex searches the readable metadata table", async () => {
         // toText is protected; reach it through the regex query path.
         const matches = await h().query(GGUF, "regex", "general\\.architecture: (\\w+)");
         assert.equal((matches[0]?.matched as string[])[0], "llama");
@@ -79,7 +110,7 @@ describe("Gguf — channels", () => {
 
     it("validate throws on bad magic; other channels degrade to empty", () => {
         const bad = new TextEncoder().encode("nope");
-        assert.throws(() => h().validate(bad));
+        assert.throws(() => h().validate(bad), { name: "SyntaxError", message: "not a valid GGUF file (bad magic or truncated header)" });
         assert.deepEqual(h().extractRaw(bad), []);
         assert.equal(h().deepJson(bad), null);
         assert.doesNotThrow(() => h().validate(GGUF));

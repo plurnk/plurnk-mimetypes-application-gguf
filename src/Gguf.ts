@@ -11,10 +11,10 @@ import type { HandlerContent, MimeSymbol } from "@plurnk/plurnk-mimetypes";
 //
 // Symbols are the metadata keys (`general.architecture`, `llama.context_length`,
 // …), in file order. deepJson is `{ version, tensorCount, metadata }` — a
-// jsonpath target. toText renders the metadata as a `key: value` table — the
-// readable projection that backs regex/glob and the embedding. Large arrays
+// jsonpath target. content renders the metadata as a `key: value` table.
+// Binary regex/glob uses the same rendering. Large arrays
 // (tokenizer vocab) are summarized as `<type[N]>`, never expanded. Per-tensor
-// inventory is out of scope for v1 (the metadata is the "what is this" answer).
+// inventory is not included.
 export default class Gguf extends BaseHandler {
     override extractRaw(content: HandlerContent): MimeSymbol[] {
         const header = readGguf(toBytes(content));
@@ -28,21 +28,20 @@ export default class Gguf extends BaseHandler {
         return { version: header.version, tensorCount: header.tensorCount, metadata: header.metadata };
     }
 
-    override extent(content: HandlerContent): number {
-        const header = readGguf(toBytes(content));
-        return header ? header.order.length : 0;
-    }
-
     override validate(content: HandlerContent): void {
-        if (!readGguf(toBytes(content))) throw new Error("not a valid GGUF file (bad magic or truncated header)");
+        if (!readGguf(toBytes(content))) throw new SyntaxError("not a valid GGUF file (bad magic or truncated header)");
     }
 
-    protected override toText(content: HandlerContent): string {
+    override content(content: HandlerContent): string | undefined {
         const header = readGguf(toBytes(content));
-        if (!header) return "";
+        if (!header) return undefined;
         const lines = header.order.map((k) => `${k}: ${renderValue(header.metadata[k])}`);
         lines.push(`tensors: ${header.tensorCount}`);
         return lines.join("\n");
+    }
+
+    protected override toText(content: HandlerContent): string {
+        return this.content(content) ?? "";
     }
 }
 
