@@ -46,7 +46,6 @@ it("{§mimetype-content} the declared built handler produces a readable projecti
     const mimetypes = new Mimetypes({ discoverOptions: {
         cwd: root,
         packageDirs: [root],
-        env: { PLURNK_EXTENSIONS_TRUSTED_ONLY: "1" },
     } });
     try {
         const projection = await mimetypes.projectReadable({ content: GGUF, hint: META.mimetype });
