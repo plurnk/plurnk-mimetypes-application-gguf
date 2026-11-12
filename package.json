@@ -45,9 +45,9 @@
         "prepublishOnly": "npm test"
     },
     "devDependencies": {
+        "@plurnk/plurnk-mimetypes": "^3.0.8",
         "@types/node": "^26.6.6",
-        "typescript": "^7.0.2",
-        "@plurnk/plurnk-mimetypes": "^3.0.7"
+        "typescript": "^7.0.2"
     },
     "peerDependencies": {
         "@plurnk/plurnk-mimetypes": "^2.0.0 || ^3.0.0"
